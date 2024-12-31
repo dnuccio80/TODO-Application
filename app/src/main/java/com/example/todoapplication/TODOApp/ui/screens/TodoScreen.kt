@@ -1,4 +1,4 @@
-package com.example.todoapplication.TODOApp.ui
+package com.example.todoapplication.TODOApp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,38 +17,46 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.todoapplication.TODOApp.ui.models.CategoryModel
 import com.example.todoapplication.TODOApp.ui.models.TaskModel
-import com.example.todoapplication.TODOApp.ui.models.predeterminatedCategories
+import com.example.todoapplication.TODOApp.ui.viewModels.TaskViewModel
 import com.example.todoapplication.ui.theme.Background
-import com.example.todoapplication.ui.theme.BusinessColor
 import com.example.todoapplication.ui.theme.CardColor
-import com.example.todoapplication.ui.theme.OtherColor
-import com.example.todoapplication.ui.theme.PersonalColor
+import com.example.todoapplication.ui.theme.CardColor_Selected
+import com.example.todoapplication.ui.theme.ContrastColor
 
 @Composable
-fun TodoScreen(innerPadding: PaddingValues) {
+fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
+
+    var showAddTaskDialog by rememberSaveable { mutableStateOf(false) }
+    val taskList by viewModel.categories.collectAsState()
+
+
     Box(
         Modifier
             .fillMaxSize()
@@ -64,13 +72,36 @@ fun TodoScreen(innerPadding: PaddingValues) {
             Spacer(Modifier.height(32.dp))
             SubtitleItem("Categories")
             Spacer(Modifier.height(16.dp))
-            CategoriesRecyclerView()
+            CategoriesRecyclerView(taskList)
             Spacer(Modifier.height(32.dp))
             SubtitleItem("Tasks")
             Spacer(Modifier.height(16.dp))
-            TasksRecyclerView()
+            TasksRecyclerView(viewModel)
         }
 
+        FabItem(Modifier.align(Alignment.BottomEnd)) { showAddTaskDialog = true }
+        AddTaskDialog(showAddTaskDialog,
+            taskList,
+            onDismiss = { showAddTaskDialog = false },
+            onAddTaskButtonClicked = {
+                viewModel.addTask(it)
+                showAddTaskDialog = false
+            }
+        )
+
+    }
+}
+
+
+@Composable
+fun FabItem(modifier: Modifier, onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        modifier = modifier.padding(16.dp),
+        containerColor = ContrastColor,
+        shape = CircleShape
+    ) {
+        Icon(Icons.Filled.Add, contentDescription = "add task", tint = Color.White)
     }
 }
 
@@ -86,16 +117,9 @@ fun SubtitleItem(text: String) {
 }
 
 @Composable
-fun CategoriesRecyclerView() {
-
-    val list = listOf(
-        CategoryModel("Personal", PersonalColor),
-        CategoryModel("Business", BusinessColor),
-        CategoryModel("Other", OtherColor),
-    )
-
+fun CategoriesRecyclerView(taskList: List<CategoryModel>) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(list) {
+        items(taskList) {
             CategoryItem(it)
         }
     }
@@ -127,50 +151,75 @@ fun CategoryItem(category: CategoryModel) {
 }
 
 @Composable
-fun TasksRecyclerView() {
-    val list = listOf(
-        TaskModel("Task 1", predeterminatedCategories.Personal),
-        TaskModel("Task 2", predeterminatedCategories.Business),
-        TaskModel("Task 3", predeterminatedCategories.Other),
-    )
+fun TasksRecyclerView(viewModel: TaskViewModel) {
 
-    LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val list by viewModel.tasks.collectAsState()
+
+    LazyColumn(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         items(list) {
-            TaskItem(it)
+            TaskItem(
+                it,
+                onValueChange = { viewModel.updateTask(it) },
+                onDeleteIconClick = { viewModel.deleteTask(it) })
         }
     }
 }
 
 @Composable
-fun TaskItem(task: TaskModel) {
-
-    var checkedValue by rememberSaveable { mutableStateOf(false) }
+fun TaskItem(task: TaskModel, onValueChange: () -> Unit, onDeleteIconClick: () -> Unit) {
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable {
-            checkedValue = !checkedValue
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onValueChange()
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardColor,
+            containerColor = if (task.isDone) CardColor_Selected else CardColor,
             contentColor = Color.White
-        )) {
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp, horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = checkedValue,
-                    onCheckedChange = { checkedValue = !checkedValue },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = task.category.color,
-                        uncheckedColor = task.category.color,
-                        checkmarkColor = Color.White
-                    )
+        )
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp, horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = task.isDone,
+                onCheckedChange = { onValueChange() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = task.category.color,
+                    uncheckedColor = task.category.color,
+                    checkmarkColor = Color.White
                 )
-                Spacer(Modifier.width(8.dp))
-                Text(task.description, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.Delete, contentDescription = "delete task", modifier = Modifier.padding(horizontal = 8.dp))
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                task.description,
+                modifier = Modifier.weight(1f),
+                textDecoration = if (task.isDone) TextDecoration.LineThrough else TextDecoration.None
+            )
+            Icon(
+                Icons.Filled.Delete,
+                contentDescription = "delete task",
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .clickable {
+                        onDeleteIconClick()
+                    })
 
-            }
         }
+    }
 }
+
+
+
 
