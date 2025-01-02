@@ -3,7 +3,7 @@ package com.example.todoapplication.TODOApp.ui.viewModels
 import androidx.lifecycle.ViewModel
 import com.example.todoapplication.TODOApp.ui.models.CategoryModel
 import com.example.todoapplication.TODOApp.ui.models.TaskModel
-import com.example.todoapplication.TODOApp.ui.models.predeterminatedCategories
+import com.example.todoapplication.TODOApp.ui.models.PredetermineCategories
 import com.example.todoapplication.ui.theme.BusinessColor
 import com.example.todoapplication.ui.theme.OtherColor
 import com.example.todoapplication.ui.theme.PersonalColor
@@ -17,7 +17,7 @@ class TaskViewModel @Inject constructor() : ViewModel() {
 
     // Categories
 
-    private val categoriesList = mutableListOf(
+    private var categoriesList = listOf(
         CategoryModel("Personal", PersonalColor),
         CategoryModel("Business", BusinessColor),
         CategoryModel("Other", OtherColor),
@@ -27,12 +27,34 @@ class TaskViewModel @Inject constructor() : ViewModel() {
     private val _categories: MutableStateFlow<List<CategoryModel>> = MutableStateFlow(categoriesList)
     val categories: StateFlow<List<CategoryModel>> = _categories
 
+    fun updateCategory(category: CategoryModel) {
+        val updatedList = categoriesList.map {
+            if(it == category){
+                it.copy(isClicked = !it.isClicked)
+            } else {
+                it
+            }
+        }
+        categoriesList = updatedList
+        _categories.value = categoriesList
+        filterTasks()
+    }
+
+    private fun filterTasks() {
+        val filteredCategoryList = categoriesList.filter { it.isClicked }
+        val filteredTaskList = tasksList.filter {
+            filteredCategoryList.contains(it.category)
+        }
+        _tasks.value = filteredTaskList
+
+    }
+
     // Tasks
 
     private var tasksList = listOf(
-        TaskModel("Task 1 test", predeterminatedCategories.Personal),
-        TaskModel("Task 2", predeterminatedCategories.Business),
-        TaskModel("Task 3", predeterminatedCategories.Other),
+        TaskModel("Task 1 test", PredetermineCategories.Personal),
+        TaskModel("Task 2", PredetermineCategories.Business),
+        TaskModel("Task 3", PredetermineCategories.Other),
     )
 
     private val _tasks: MutableStateFlow<List<TaskModel>> = MutableStateFlow(tasksList)

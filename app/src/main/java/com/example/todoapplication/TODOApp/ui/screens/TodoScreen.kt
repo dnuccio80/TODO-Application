@@ -72,7 +72,7 @@ fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
             Spacer(Modifier.height(32.dp))
             SubtitleItem("Categories")
             Spacer(Modifier.height(16.dp))
-            CategoriesRecyclerView(taskList)
+            CategoriesRecyclerView(taskList) { viewModel.updateCategory(it) }
             Spacer(Modifier.height(32.dp))
             SubtitleItem("Tasks")
             Spacer(Modifier.height(16.dp))
@@ -91,7 +91,6 @@ fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
 
     }
 }
-
 
 @Composable
 fun FabItem(modifier: Modifier, onClick: () -> Unit) {
@@ -117,24 +116,27 @@ fun SubtitleItem(text: String) {
 }
 
 @Composable
-fun CategoriesRecyclerView(taskList: List<CategoryModel>) {
+fun CategoriesRecyclerView(taskList: List<CategoryModel>, onItemClicked: (CategoryModel) -> Unit) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(taskList) {
-            CategoryItem(it)
+            CategoryItem(it) { onItemClicked(it) }
         }
     }
 }
 
 @Composable
-fun CategoryItem(category: CategoryModel) {
+fun CategoryItem(category: CategoryModel, onCardClick: () -> Unit) {
     Card(
         modifier = Modifier
             .width(130.dp)
-            .height(70.dp),
+            .height(70.dp)
+            .clickable {
+                onCardClick()
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardColor,
+            containerColor = if(category.isClicked) CardColor else CardColor_Selected,
             contentColor = Color.White
         )
     ) {
@@ -215,7 +217,6 @@ fun TaskItem(task: TaskModel, onValueChange: () -> Unit, onDeleteIconClick: () -
                     .clickable {
                         onDeleteIconClick()
                     })
-
         }
     }
 }

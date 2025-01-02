@@ -11,7 +11,7 @@ data class CategoryModel(
     val isClicked: Boolean = true
 )
 
-object predeterminatedCategories{
+object PredetermineCategories{
     val Personal = CategoryModel("Personal", PersonalColor)
     val Business = CategoryModel("Business", BusinessColor)
     val Other = CategoryModel("Other", OtherColor)
