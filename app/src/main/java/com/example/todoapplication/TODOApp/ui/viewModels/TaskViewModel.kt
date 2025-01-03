@@ -1,6 +1,11 @@
 package com.example.todoapplication.TODOApp.ui.viewModels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.todoapplication.TODOApp.domain.AddTaskUseCase
+import com.example.todoapplication.TODOApp.domain.DeleteClassUseCase
+import com.example.todoapplication.TODOApp.domain.GetAllTasksUseCase
+import com.example.todoapplication.TODOApp.domain.UpdateTaskUseCase
 import com.example.todoapplication.TODOApp.ui.models.CategoryModel
 import com.example.todoapplication.TODOApp.ui.models.TaskModel
 import com.example.todoapplication.TODOApp.ui.models.PredetermineCategories
@@ -8,12 +13,21 @@ import com.example.todoapplication.ui.theme.BusinessColor
 import com.example.todoapplication.ui.theme.OtherColor
 import com.example.todoapplication.ui.theme.PersonalColor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TaskViewModel @Inject constructor() : ViewModel() {
+class TaskViewModel @Inject constructor(
+    private val addTaskUseCase: AddTaskUseCase,
+    private val updateTaskUseCase: UpdateTaskUseCase,
+    private val deleteTaskUseCase: DeleteClassUseCase,
+    getAllTasksUseCase: GetAllTasksUseCase,
+    ) : ViewModel() {
 
     // Categories
 
@@ -41,46 +55,37 @@ class TaskViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun filterTasks() {
-        val filteredCategoryList = categoriesList.filter { it.isClicked }
-        val filteredTaskList = tasksList.filter {
-            filteredCategoryList.contains(it.category)
-        }
-        _tasks.value = filteredTaskList
+//        val filteredCategoryList = categoriesList.filter { it.isClicked }
+//        val filteredTaskList = tasksList.filter {
+//            filteredCategoryList.contains(it.category)
+//        }
+//        _tasks.value = filteredTaskList
 
     }
 
-    // Tasks
+    // TASKS
 
-    private var tasksList = listOf(
-        TaskModel("Task 1 test", PredetermineCategories.Personal),
-        TaskModel("Task 2", PredetermineCategories.Business),
-        TaskModel("Task 3", PredetermineCategories.Other),
+    private val taskList = getAllTasksUseCase().stateIn(
+        viewModelScope, SharingStarted.Lazily, emptyList()
     )
-
-    private val _tasks: MutableStateFlow<List<TaskModel>> = MutableStateFlow(tasksList)
-    val tasks: StateFlow<List<TaskModel>> = _tasks
+    val tasks: StateFlow<List<TaskModel>> = taskList
 
     fun addTask(task:TaskModel){
-        tasksList += task
-        _tasks.value = tasksList
+        viewModelScope.launch(Dispatchers.IO) {
+            addTaskUseCase(task)
+        }
     }
 
     fun updateTask(task:TaskModel){
-        val updateList = tasksList.map {
-            if(it == task){
-                it.copy(isDone = !it.isDone)
-            } else {
-                it
-            }
+        val updatedTask = task.copy(isDone = !task.isDone)
+        viewModelScope.launch(Dispatchers.IO) {
+            updateTaskUseCase(updatedTask)
         }
-        tasksList = updateList
-        _tasks.value = tasksList
-
     }
 
     fun deleteTask(task: TaskModel) {
-        val index = tasksList.indexOf(task)
-        tasksList -= tasksList[index]
-        _tasks.value = tasksList
+        viewModelScope.launch(Dispatchers.IO) {
+            deleteTaskUseCase(task)
+        }
     }
 }

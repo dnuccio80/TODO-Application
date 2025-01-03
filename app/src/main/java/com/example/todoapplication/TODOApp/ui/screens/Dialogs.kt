@@ -89,7 +89,7 @@ fun AddTaskDialog(
                     Button(
                         onClick = {
                             if(value.isNotEmpty()){
-                                onAddTaskButtonClicked(TaskModel(value, category!!))
+                                onAddTaskButtonClicked(TaskModel( description = value, category =  category!!))
                                 value = ""
                             }
                         },
