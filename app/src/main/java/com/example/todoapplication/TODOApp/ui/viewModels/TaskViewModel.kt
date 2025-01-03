@@ -54,6 +54,17 @@ class TaskViewModel @Inject constructor(
         filterTasks()
     }
 
+    fun addCategory(category: CategoryModel) {
+        categoriesList += category
+        _categories.value = categoriesList
+    }
+
+    fun deleteCategory(category: CategoryModel){
+        val index = categoriesList.indexOf(category)
+        categoriesList -= categoriesList[index]
+        _categories.value = categoriesList
+    }
+
     private fun filterTasks() {
 //        val filteredCategoryList = categoriesList.filter { it.isClicked }
 //        val filteredTaskList = tasksList.filter {

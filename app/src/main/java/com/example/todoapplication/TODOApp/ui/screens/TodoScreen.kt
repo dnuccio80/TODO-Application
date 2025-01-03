@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -54,6 +56,7 @@ import com.example.todoapplication.ui.theme.ContrastColor
 fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
 
     var showAddTaskDialog by rememberSaveable { mutableStateOf(false) }
+    var editMode by rememberSaveable { mutableStateOf(false) }
     val taskList by viewModel.categories.collectAsState()
 
 
@@ -70,9 +73,15 @@ fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
         ) {
             Header("Welcome, Damian")
             Spacer(Modifier.height(32.dp))
-            SubtitleItem("Categories")
+            CategoryHeaderItem(
+                onCategoryAdded = { viewModel.addCategory(it) },
+                onEditButtonClicked = { editMode = !editMode })
             Spacer(Modifier.height(16.dp))
-            CategoriesRecyclerView(taskList) { viewModel.updateCategory(it) }
+            CategoriesRecyclerView(
+                taskList,
+                editMode,
+                onItemClicked = { viewModel.updateCategory(it) },
+                onDeleteCategory = { viewModel.deleteCategory(it) })
             Spacer(Modifier.height(32.dp))
             SubtitleItem("Tasks")
             Spacer(Modifier.height(16.dp))
@@ -90,6 +99,43 @@ fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
         )
 
     }
+}
+
+@Composable
+fun CategoryHeaderItem(onCategoryAdded: (CategoryModel) -> Unit, onEditButtonClicked: () -> Unit) {
+
+    var showAddCategoryDialog by rememberSaveable { mutableStateOf(false) }
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SubtitleItem("Categories", Modifier.weight(1f))
+        Icon(Icons.Filled.Add,
+            contentDescription = "add category",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                showAddCategoryDialog = true
+            })
+        Spacer(Modifier.width(32.dp))
+        Icon(
+            Icons.Filled.Edit,
+            contentDescription = "edit categories",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                onEditButtonClicked()
+            })
+
+    }
+    AddCategoryDialog(
+        show = showAddCategoryDialog,
+        onDismiss = { showAddCategoryDialog = false },
+        onCategoryAdded = {
+            onCategoryAdded(it)
+            showAddCategoryDialog = false
+        })
 }
 
 @Composable
@@ -111,21 +157,30 @@ fun Header(text: String) {
 }
 
 @Composable
-fun SubtitleItem(text: String) {
-    Text(text.uppercase(), style = MaterialTheme.typography.titleMedium)
+fun SubtitleItem(text: String, modifier: Modifier = Modifier) {
+    Text(text.uppercase(), style = MaterialTheme.typography.titleMedium, modifier = modifier)
 }
 
 @Composable
-fun CategoriesRecyclerView(taskList: List<CategoryModel>, onItemClicked: (CategoryModel) -> Unit) {
+fun CategoriesRecyclerView(
+    taskList: List<CategoryModel>,
+    editMode:Boolean,
+    onItemClicked: (CategoryModel) -> Unit,
+    onDeleteCategory: (CategoryModel) -> Unit
+) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(taskList) {
-            CategoryItem(it) { onItemClicked(it) }
+            CategoryItem(
+                it,
+                editMode,
+                onCardClick = { onItemClicked(it) },
+                onDeleteCategory = { onDeleteCategory(it) })
         }
     }
 }
 
 @Composable
-fun CategoryItem(category: CategoryModel, onCardClick: () -> Unit) {
+fun CategoryItem(category: CategoryModel,editMode: Boolean, onCardClick: () -> Unit, onDeleteCategory: () -> Unit) {
     Card(
         modifier = Modifier
             .width(130.dp)
@@ -136,7 +191,7 @@ fun CategoryItem(category: CategoryModel, onCardClick: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if(category.isClicked) CardColor else CardColor_Selected,
+            containerColor = if (category.isClicked) CardColor else CardColor_Selected,
             contentColor = Color.White
         )
     ) {
@@ -145,7 +200,19 @@ fun CategoryItem(category: CategoryModel, onCardClick: () -> Unit) {
                 .fillMaxSize()
                 .padding(16.dp),
         ) {
-            Text(category.name)
+            Row(Modifier.fillMaxWidth()) {
+                Text(category.name, modifier = Modifier.weight(1f))
+                if(editMode){
+                    Icon(
+                        Icons.Filled.Clear,
+                        contentDescription = "delete category",
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clickable {
+                                onDeleteCategory()
+                            })
+                }
+            }
             Spacer(Modifier.size(4.dp))
             HorizontalDivider(Modifier.fillMaxWidth(), color = category.color, thickness = 2.dp)
         }

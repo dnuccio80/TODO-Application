@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.todoapplication.TODOApp.ui.models.CategoryModel
@@ -88,8 +89,13 @@ fun AddTaskDialog(
                     Spacer(Modifier.size(16.dp))
                     Button(
                         onClick = {
-                            if(value.isNotEmpty()){
-                                onAddTaskButtonClicked(TaskModel( description = value, category =  category!!))
+                            if (value.isNotEmpty()) {
+                                onAddTaskButtonClicked(
+                                    TaskModel(
+                                        description = value,
+                                        category = category!!
+                                    )
+                                )
                                 value = ""
                             }
                         },
@@ -109,14 +115,91 @@ fun AddTaskDialog(
     }
 }
 
+@Composable
+fun AddCategoryDialog(show: Boolean, onDismiss: () -> Unit, onCategoryAdded:(CategoryModel) ->Unit) {
+
+    var value by rememberSaveable { mutableStateOf("") }
+
+    if (show) {
+        Dialog(
+            onDismissRequest = { onDismiss() }
+        ) {
+            Card(
+                Modifier.width(250.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = CardColor_Selected,
+                    contentColor = Color.White
+                ),
+                shape = RectangleShape
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    TextField(
+                        value = value,
+                        onValueChange = { value = it },
+                        placeholder = { Text("Category name..") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedPlaceholderColor = Color.White,
+                            unfocusedPlaceholderColor = Color.Gray
+                        )
+                    )
+                    HorizontalDivider(
+                        Modifier.fillMaxWidth(),
+                        thickness = 2.dp,
+                        color = Color.White
+                    )
+                    Spacer(Modifier.size(16.dp))
+                    Text(
+                        "Category name does not have more than 15 characters",
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.size(16.dp))
+                    Button(
+                        onClick = {
+                            if (hasCorrectSyntax(value)) {
+                                onCategoryAdded(CategoryModel(name = value, color = Color.Black))
+                                value = ""
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RectangleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ContrastColor,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Add Category".uppercase())
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
-fun RadioButtonsGroup(categorySelected: String, taskList: List<CategoryModel>, onButtonClicked:(String) -> Unit) {
+fun RadioButtonsGroup(
+    categorySelected: String,
+    taskList: List<CategoryModel>,
+    onButtonClicked: (String) -> Unit
+) {
 
     taskList.forEach {
-        Row(Modifier.fillMaxWidth().clickable {
-            onButtonClicked(it.name)
-        }, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable {
+                    onButtonClicked(it.name)
+                }, verticalAlignment = Alignment.CenterVertically
+        ) {
             RadioButton(
                 selected = categorySelected == it.name,
                 onClick = { onButtonClicked(it.name) },
@@ -130,5 +213,8 @@ fun RadioButtonsGroup(categorySelected: String, taskList: List<CategoryModel>, o
 
         }
     }
+}
 
+fun hasCorrectSyntax(value: String): Boolean {
+    return value.isNotEmpty() && value.length <= 15
 }
