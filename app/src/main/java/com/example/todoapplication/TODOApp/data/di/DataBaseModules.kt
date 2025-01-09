@@ -2,7 +2,7 @@ package com.example.todoapplication.TODOApp.data.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.todoapplication.TODOApp.data.TaskDataBase
+import com.example.todoapplication.TODOApp.data.TodoDataBase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,16 +15,21 @@ object DataBaseModules {
 
     @Provides
     @Singleton
-    fun provideDataBase(app: Application) : TaskDataBase {
+    fun provideDataBase(app: Application): TodoDataBase {
         return Room.databaseBuilder(
             app,
-            TaskDataBase::class.java,
-            "TaskDataBase"
-        ).build()
+            TodoDataBase::class.java,
+            "MyDataBase"
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
-    fun provideTaskDao(dataBase: TaskDataBase) = dataBase.taskDao
+    fun provideTaskDao(dataBase: TodoDataBase) = dataBase.taskDao
+
+    @Provides
+    @Singleton
+    fun provideCategoryDao(dataBase: TodoDataBase) = dataBase.categoryDao
 
 }

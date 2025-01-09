@@ -44,9 +44,9 @@ fun AddTaskDialog(
 ) {
 
     var value by rememberSaveable { mutableStateOf("") }
-    var categorySelected by rememberSaveable { mutableStateOf(taskList[0].name) }
+    var categorySelected by rememberSaveable { mutableStateOf("") }
 
-    val category = taskList.find { it.name == categorySelected }
+    var category = if (categorySelected.isNotEmpty()) taskList.find { it.name == categorySelected } else null
 
     if (show) {
         Dialog(
@@ -89,7 +89,7 @@ fun AddTaskDialog(
                     Spacer(Modifier.size(16.dp))
                     Button(
                         onClick = {
-                            if (value.isNotEmpty()) {
+                            if (value.isNotEmpty() && categorySelected.isNotEmpty() && category != null) {
                                 onAddTaskButtonClicked(
                                     TaskModel(
                                         description = value,
@@ -97,6 +97,8 @@ fun AddTaskDialog(
                                     )
                                 )
                                 value = ""
+                                categorySelected = ""
+                                category = null
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -116,7 +118,11 @@ fun AddTaskDialog(
 }
 
 @Composable
-fun AddCategoryDialog(show: Boolean, onDismiss: () -> Unit, onCategoryAdded:(CategoryModel) ->Unit) {
+fun AddCategoryDialog(
+    show: Boolean,
+    onDismiss: () -> Unit,
+    onCategoryAdded: (CategoryModel) -> Unit
+) {
 
     var value by rememberSaveable { mutableStateOf("") }
 
@@ -165,7 +171,12 @@ fun AddCategoryDialog(show: Boolean, onDismiss: () -> Unit, onCategoryAdded:(Cat
                     Button(
                         onClick = {
                             if (hasCorrectSyntax(value)) {
-                                onCategoryAdded(CategoryModel(name = value, color = Color.Black))
+                                onCategoryAdded(
+                                    CategoryModel(
+                                        name = value,
+                                        color = generateRandomColor()
+                                    )
+                                )
                                 value = ""
                             }
                         },
@@ -217,4 +228,12 @@ fun RadioButtonsGroup(
 
 fun hasCorrectSyntax(value: String): Boolean {
     return value.isNotEmpty() && value.length <= 15
+}
+
+fun generateRandomColor(): Color {
+    return Color(randomInt(), randomInt(), randomInt())
+}
+
+fun randomInt(): Int {
+    return (0..255).random()
 }
