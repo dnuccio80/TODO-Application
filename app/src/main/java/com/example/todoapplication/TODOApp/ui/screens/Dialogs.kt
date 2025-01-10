@@ -231,7 +231,7 @@ fun hasCorrectSyntax(value: String): Boolean {
 }
 
 fun generateRandomColor(): Color {
-    return Color(randomInt(), randomInt(), randomInt())
+    return Color(randomInt(), randomInt(), randomInt(),255)
 }
 
 fun randomInt(): Int {

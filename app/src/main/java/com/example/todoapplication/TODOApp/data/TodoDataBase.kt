@@ -7,7 +7,7 @@ import com.example.todoapplication.TODOApp.data.categories.CategoryDao
 import com.example.todoapplication.TODOApp.data.categories.CategoryEntity
 import com.example.todoapplication.TODOApp.data.di.Converters
 
-@Database(entities = [TaskEntity::class, CategoryEntity::class], version = 5)
+@Database(entities = [TaskEntity::class, CategoryEntity::class], version = 6)
 @TypeConverters(Converters::class)
 abstract class TodoDataBase: RoomDatabase() {
     abstract val taskDao:TaskDao

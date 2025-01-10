@@ -13,6 +13,7 @@ data class TaskEntity (
     val id: Int = 0,
     val description: String,
     val category: CategoryModel,
+    val categoryId:Int,
     val isDone: Boolean = false
 )
 

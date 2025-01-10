@@ -9,4 +9,4 @@ data class TaskModel(
     val isDone: Boolean = false
 )
 
-fun TaskModel.toTaskEntity() = TaskEntity(id, description, category, isDone)
+fun TaskModel.toTaskEntity() = TaskEntity(id, description, category, categoryId = category.id, isDone)

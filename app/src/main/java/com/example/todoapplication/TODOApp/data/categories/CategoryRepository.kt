@@ -7,6 +7,7 @@ import com.example.todoapplication.ui.theme.BusinessColor
 import com.example.todoapplication.ui.theme.OtherColor
 import com.example.todoapplication.ui.theme.PersonalColor
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -33,6 +34,10 @@ class CategoryRepository @Inject constructor(private val categoryDao: CategoryDa
 
     suspend fun deleteCategory(category: CategoryModel){
         categoryDao.deleteCategory(category.toCategoryEntity())
+    }
+
+    suspend fun modifyCategory(category: CategoryModel){
+        categoryDao.modifyCategory(category.toCategoryEntity())
     }
 
     private val defaultCategories = listOf(

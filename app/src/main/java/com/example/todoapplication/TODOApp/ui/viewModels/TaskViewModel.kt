@@ -6,9 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.todoapplication.TODOApp.domain.categoriesUseCases.AddCategoryUseCase
 import com.example.todoapplication.TODOApp.domain.categoriesUseCases.DeleteCategoryUseCase
 import com.example.todoapplication.TODOApp.domain.categoriesUseCases.GetAllCategoriesUseCase
+import com.example.todoapplication.TODOApp.domain.categoriesUseCases.ModifyCategoryUseCase
 import com.example.todoapplication.TODOApp.domain.tasksUseCases.AddTaskUseCase
 import com.example.todoapplication.TODOApp.domain.tasksUseCases.DeleteClassUseCase
+import com.example.todoapplication.TODOApp.domain.tasksUseCases.DeleteTaskByCategoryIdUseCase
 import com.example.todoapplication.TODOApp.domain.tasksUseCases.GetAllTasksUseCase
+import com.example.todoapplication.TODOApp.domain.tasksUseCases.GetClickedTasksUseCase
 import com.example.todoapplication.TODOApp.domain.tasksUseCases.UpdateTaskUseCase
 import com.example.todoapplication.TODOApp.ui.models.CategoryModel
 import com.example.todoapplication.TODOApp.ui.models.TaskModel
@@ -20,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +35,9 @@ class TaskViewModel @Inject constructor(
     private val deleteTaskUseCase: DeleteClassUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val modifyCategoryUseCase: ModifyCategoryUseCase,
+    private val deleteTaskByCategoryIdUseCase: DeleteTaskByCategoryIdUseCase,
+    getClickedTasksUseCase: GetClickedTasksUseCase,
     getAllTasksUseCase: GetAllTasksUseCase,
     getAllCategoriesUseCase: GetAllCategoriesUseCase,
     ) : ViewModel() {
@@ -53,16 +60,10 @@ class TaskViewModel @Inject constructor(
     }
 
     fun updateCategory(category: CategoryModel) {
-//        val updatedList = categoriesList.map {
-//            if(it == category){
-//                it.copy(isClicked = !it.isClicked)
-//            } else {
-//                it
-//            }
-//        }
-//        categoriesList = updatedList
-//        _categories.value = categoriesList
-//        filterTasks()
+        val updatedCategory = category.copy(isClicked = !category.isClicked)
+        viewModelScope.launch(Dispatchers.IO) {
+            modifyCategoryUseCase(updatedCategory)
+        }
     }
 
     fun addCategory(category: CategoryModel) {
@@ -74,24 +75,16 @@ class TaskViewModel @Inject constructor(
     fun deleteCategory(category: CategoryModel){
         viewModelScope.launch(Dispatchers.IO) {
             deleteCategoryUseCase(category)
+            deleteTaskByCategoryIdUseCase(category.id)
         }
-    }
-
-    private fun filterTasks() {
-//        val filteredCategoryList = categoriesList.filter { it.isClicked }
-//        val filteredTaskList = tasksList.filter {
-//            filteredCategoryList.contains(it.category)
-//        }
-//        _tasks.value = filteredTaskList
-
     }
 
     // TASKS
 
-    private val taskList = getAllTasksUseCase().stateIn(
-        viewModelScope, SharingStarted.Lazily, emptyList()
+    private var _tasks =  getClickedTasksUseCase().stateIn(
+    viewModelScope, SharingStarted.Lazily, emptyList()
     )
-    val tasks: StateFlow<List<TaskModel>> = taskList
+    val tasks: StateFlow<List<TaskModel>> = _tasks
 
     fun addTask(task:TaskModel){
         viewModelScope.launch(Dispatchers.IO) {
@@ -111,4 +104,5 @@ class TaskViewModel @Inject constructor(
             deleteTaskUseCase(task)
         }
     }
+
 }

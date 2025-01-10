@@ -14,6 +14,9 @@ interface TaskDao {
     @Query("SELECT * FROM TaskEntity")
     fun getAllTasks(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM TaskEntity WHERE categoryId in (SELECT id FROM CategoryEntity WHERE isClicked = 1) ")
+    fun getClickedTasks(): Flow<List<TaskEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addTask(taskEntity: TaskEntity)
 
@@ -22,5 +25,8 @@ interface TaskDao {
 
     @Delete
     suspend fun deleteTask(taskEntity: TaskEntity)
+
+    @Query("DELETE FROM TaskEntity WHERE categoryId = :categoryId")
+    suspend fun deleteTaskByCategoryId(categoryId: Int)
 
 }

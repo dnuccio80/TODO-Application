@@ -71,7 +71,7 @@ fun TodoScreen(innerPadding: PaddingValues, viewModel: TaskViewModel) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            Header("Welcome, Damian")
+            Header("TO-DO List")
             Spacer(Modifier.height(32.dp))
             CategoryHeaderItem(
                 onCategoryAdded = { viewModel.addCategory(it) },
